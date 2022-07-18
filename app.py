@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)  # criamos o servidor web flask
@@ -38,16 +38,32 @@ def criar():
     tarefa = Tarefa(conteudo=request.form['conteudo_tarefa'], feita=False)
     db.session.add(tarefa)
     db.session.commit()
-    return 'tarefa guardada'
+    return redirect(url_for('home'))
+
+
+@app.route('/eliminar-tarefa/<id>')
+def eliminar(id):
+    tarefa = Tarefa.query.filter_by(id=int(id)).delete()  # pesquisar na db pelo id da rota
+    db.session.commit()
+    return redirect(url_for('home'))
+
+
+@app.route('/tarefa-feita/<id>')
+def feita(id):
+    tarefa = Tarefa.query.filter_by(id=int(id)).first()  # obter a tarefa
+    tarefa.feita = not(tarefa.feita)  # inverter a variavel (bool)
+    db.session.commit()
+    return redirect(url_for('home'))
+
 
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    todas_as_tarefas = Tarefa.query.all()  # criar uma variavel com a consulta de todos os elementos da tabela
+    return render_template('index.html', lista_tarefas=todas_as_tarefas)
 
 
 if __name__ == '__main__':
     app.run()
 
 
-# todo 13 pag 55
